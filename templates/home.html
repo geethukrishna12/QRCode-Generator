@@ -1,111 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>QR Code Generator</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #4800a3;
-        }
-
-        .container {
-            background-color: #1a0247;
-            color: white;
-            border-radius: 5%;
-            padding: 3em;
+            background-color: #f0f4ff;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         .header {
+            background-color: #4800a3;
+            padding: 1.5em 0;
             color: white;
             text-align: center;
-            margin-top: 1em;
-            margin-bottom: 1em;
-            font-size: 34px;
+            font-size: 2rem;
             font-weight: bold;
+        }
+
+        .card-custom {
+            background-color: white;
+            border-radius: 15px;
+            padding: 2em;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2em;
+            width: 100%;
+        }
+
+        label {
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #4800a3;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #360080;
+        }
+
+        .qr-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1em auto;
+        }
+
+        .feedback {
+            color: #333;
+            font-size: 1rem;
+            margin-top: 1em;
+            text-align: center;
         }
 
         .download-share-buttons {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
+            gap: 1em;
             margin-top: 1em;
         }
 
-        .download-share-buttons button {
-            margin-right: 0.5em;
+        footer {
+            text-align: center;
+            margin-top: 3em;
+            color: #888;
         }
 
-        .py-2 {
-            background-color: #1a0247;
+        @media (max-width: 768px) {
+            .header {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
-
 <body>
-    <header class="py-2">
-        <h1 class="header">QR Code Generator</h1>
-    </header>
-    <div class="container shadow" style="width: 800px; margin-top: 5em; padding: 3em">
-        <form method="post">
-            {% csrf_token %}
-            <h3>
-                <center>Enter text/link to generate a QR code</center>
-            </h3>
-            </br>
-            <div class="input-group mb-3">
-                <span class="input-group-text" id="inputGroup-sizing-default">Text/Link:</span>
-                <input type="text" class="form-control" aria-describedby="inputGroup-sizing-default" name="qr_text"
-                    autofocus>
-            </div>
-            <div class="input-group mb-3">
-                <input type="submit" style="max-width: 200px; margin: auto" class="form-control">
-            </div>
-        </form>
-        {% if qr_image_base64 %}
-        <h4>
-            <center>QR for {{ variable }} is:</center>
-        </h4></br>
-        {% endif %}
-        <div class="input-group mb-3">
-            <div style="margin: auto">
-                {% if qr_image_base64 %}
-                <img src="data:image/png;base64,{{ qr_image_base64 }}" alt="QR Code">
-                <div class="download-share-buttons">
-                    <button class="btn btn-primary" onclick="downloadQR()">Download</button>
-                    <button class="btn btn-primary" onclick="shareQR()">Share</button>
+
+    <div class="header">QR Code Generator</div>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center g-4">
+            <!-- Text/Link QR -->
+            <div class="col-lg-5 col-md-6 col-sm-10">
+                <div class="card-custom">
+                    <form method="post">
+                        {% csrf_token %}
+                        <h4 class="text-center mb-4">Generate QR from Text / Link</h4>
+
+                        <div class="mb-3">
+                            <label for="qr_text">Enter Text or Link:</label>
+                            <input type="text" class="form-control" name="qr_text" id="qr_text" placeholder="e.g. https://example.com" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Generate QR Code</button>
+                        </div>
+
+                        {% if qr_type == 'text' %}
+                        <div class="feedback">
+                            <p>QR Code for: <strong>{{ variable }}</strong></p>
+                            <img class="qr-image" src="data:image/png;base64,{{ qr_image_base64 }}" alt="QR Code">
+                            <div class="download-share-buttons">
+                                <button type="button" class="btn btn-outline-primary" onclick="downloadQR('{{ qr_image_base64 }}')">Download</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="shareQR('{{ qr_image_base64 }}')">Share</button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
                 </div>
-                {% endif %}
+            </div>
+
+            <!-- WhatsApp QR -->
+            <div class="col-lg-5 col-md-6 col-sm-10">
+                <div class="card-custom">
+                    <form method="post">
+                        {% csrf_token %}
+                        <h4 class="text-center mb-4">Generate WhatsApp QR Code</h4>
+
+                        <div class="mb-3">
+                            <label for="qr_whatsapp">WhatsApp Number:</label>
+                            <input type="text" class="form-control" name="qr_whatsapp" id="qr_whatsapp" placeholder="e.g. 91XXXXXXXXXX" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Generate QR Code</button>
+                        </div>
+
+                        {% if qr_type == 'whatsapp' %}
+                        <div class="feedback">
+                            <p>QR Code for: <strong>{{ variable }}</strong></p>
+                            <img class="qr-image" src="data:image/png;base64,{{ qr_image_base64 }}" alt="QR Code">
+                            <div class="download-share-buttons">
+                                <button type="button" class="btn btn-outline-primary" onclick="downloadQR('{{ qr_image_base64 }}')">Download</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="shareQR('{{ qr_image_base64 }}')">Share</button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
+    <footer class="pb-4">
+        &copy; 2025 QR Code Generator | Made with ❤️
+    </footer>
+
     <script>
-        function downloadQR() {
+        function downloadQR(imageData) {
             const link = document.createElement('a');
-            link.href = 'data:image/png;base64,{{ qr_image_base64 }}';
+            link.href = 'data:image/png;base64,' + imageData;
             link.download = 'qr_code.png';
             link.click();
         }
 
-        function shareQR() {
-            const dataUrl = 'data:image/png;base64,{{ qr_image_base64 }}';
-            if (navigator.share) {
-                navigator.share({
-                    title: 'QR Code',
-                    text: 'Check out this QR Code',
-                    url: dataUrl
-                })
-                    .then(() => console.log('Shared successfully'))
-                    .catch((error) => console.log('Error sharing:', error));
-            } else {
-                const newWindow = window.open(dataUrl);
-                if (!newWindow) {
-                    alert('Pop-up blocked. Please allow pop-ups for this website and try again.');
-                }
+        async function shareQR(imageData) {
+            if (!navigator.canShare || !navigator.canShare({ files: [] })) {
+                alert("Sharing not supported on this device. Please download the image and share manually.");
+                return;
+            }
+
+            try {
+                const res = await fetch("data:image/png;base64," + imageData);
+                const blob = await res.blob();
+                const file = new File([blob], "qr_code.png", { type: "image/png" });
+
+                await navigator.share({
+                    title: "QR Code",
+                    text: "Here is your QR Code",
+                    files: [file],
+                });
+            } catch (error) {
+                console.error("Share failed:", error);
+                alert("Unable to share. Try downloading instead.");
             }
         }
     </script>
 </body>
-
 </html>
